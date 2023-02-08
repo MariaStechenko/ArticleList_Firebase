@@ -1,34 +1,54 @@
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
+import { db } from '../firebase';
+import { doc, getDoc } from 'firebase/firestore';
 import Menu from './Menu';
-import articles from '../data/articles';
 
 const SingleArticle = () => {
-  const params = useParams();
-  const article = articles.find(
-    (article) => article.id.toString() === params.id.toString()
-  );
-  return (
-    <>
-      <Menu />
-      <div className="SingleArticleWrapper">
-        <div className="SingleArticleContainer">
-          <h2>{article.title}</h2>
-          <img
-            src={article.imageUrl}
-            alt="Generic placeholder"
-            className="SingleArticleImg"
-          />
+  const { id } = useParams();
 
-          <h3>{article.description}</h3>
+  const [article, setArticle] = useState(null);
 
-          <h4>
-            Expert Comment: <br /> <br />
-            {article.expertComment}
-          </h4>
+  const docRef = doc(db, 'articles', id);
+
+  useEffect(() => {
+    getDoc(docRef).then((docSnap) => {
+      if (docSnap.exists()) {
+        setArticle(docSnap.data());
+      } else {
+        console.log('Oops...');
+      }
+    });
+  }, []);
+
+  if (!article) return <div />;
+  else {
+    const { title, imageUrl, expertComment, description } = article;
+
+    return (
+      <>
+        <Menu />
+
+        <div className="SingleArticleWrapper">
+          <div className="SingleArticleContainer">
+            <h2>{title}</h2>
+            <img
+              src={imageUrl}
+              alt="Generic placeholder"
+              className="SingleArticleImg"
+            />
+
+            <h3>{description}</h3>
+
+            <h4>
+              Expert Comment: <br /> <br />
+              {expertComment}
+            </h4>
+          </div>
         </div>
-      </div>
-    </>
-  );
+      </>
+    );
+  }
 };
 
 export default SingleArticle;
